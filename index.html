@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#3e4c31">
+  <meta name="description" content="Your personal strength, conditioning and calisthenics training log.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Forge &amp; Fuel</title>
+</head>
+<body>
+  <a class="skip-link" href="#view">Skip to workout</a>
+  <div id="app">
+    <header class="app-header"><a class="brand" href="#home" aria-label="Forge and Fuel home"><span class="brand-mark" aria-hidden="true">F/F</span>FORGE &amp; FUEL</a><span class="app-status"><span id="connection"></span><span id="save-state" role="status">Opening storage…</span></span></header>
+    <div id="save-error" class="error-banner" role="alert" hidden></div>
+    <div id="update-bar" class="update-bar" hidden>App update ready. <button data-action="update">Apply update</button></div>
+    <main id="view" tabindex="-1"><p>Opening your training log…</p><noscript>This app needs JavaScript enabled to save workouts.</noscript></main>
+    <nav class="bottom-nav" aria-label="Main navigation"><a href="#home" data-nav="home"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6M6 6v12M18 6v12M21 9v6M6 12h12"/></svg>Workout</a><a href="#plan" data-nav="plan"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Plan</a><a href="#progress" data-nav="progress"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v16h16M8 15l4-5 3 3 5-6"/></svg>Progress</a><a href="#settings" data-nav="settings"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg>Settings</a></nav>
+  </div>
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="modal" aria-labelledby="modal-title"><div id="modal-body"></div></dialog>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+// Named exercise choices shared by input validation and the picker.
+export const MOVEMENTS = [
+ ['squat','Back squat','strength','Barbell','Set the bar securely, brace your trunk and squat through a controlled range you can repeat. Stand back up without rushing.'],
+ ['bench','Bench press','strength','Barbell','Set your feet and upper back, lower the bar under control and press it back up. Use suitable safeties or assistance.'],
+ ['press','Overhead press','strength','Barbell','Brace while standing, press from the shoulders overhead, then lower under control. Avoid leaning back to finish a rep.'],
+ ['front-squat','Front squat','strength','Barbell','Keep the bar supported in the front rack and your torso controlled as you squat and stand.'],
+ ['deadlift','Deadlift','strength','Barbell','Set up close to the bar, brace, push through the floor and stand tall. Lower with control; choose a load you can manage with consistent technique.'],
+ ['row','Barbell row','strength','Barbell','Hinge into a stable position and pull the bar toward your torso without jerking it. Lower under control.'],
+ ['weighted-pullup','Weighted pullup','strength','Main lift','Secure the added weight, start from a controlled hang, pull until your chin clears the bar and lower under control.'],
+ ['pushups','Pushups','reps','Calisthenics','Keep your body in a straight line. Lower your chest between your hands, then press up. Use a repeatable controlled range.'],
+ ['incline-pushups','Incline pushups','reps','Calisthenics','Place hands on a secure raised surface. Keep your body aligned while lowering and pressing up. Record the same incline for comparisons.'],
+ ['pullups','Pullups','reps','Calisthenics','Start with a controlled grip and pull until your chin clears the bar. Lower under control; avoid swinging. Record assistance as a distinct variation.'],
+ ['pike','Pike pushups','reps','Calisthenics','Raise your hips, bend your elbows to lower your head between and slightly ahead of your hands, then press back up under control.'],
+ ['air-squat','Bodyweight squats','reps','Calisthenics','Keep your feet planted, bend at hips and knees, then stand. Use a comfortable controlled range and consistent depth.'],
+ ['ring-row','Ring rows','reps','Rings','Keep a straight body, pull your chest toward the rings and lower slowly. Foot position changes difficulty; note it when comparing results.'],
+ ['inverted-row','Inverted rows','reps','Calisthenics','Use a secure bar, keep your body aligned and pull your chest toward it. Lower under control.'],
+ ['lunge','Reverse lunges','reps','Calisthenics','Step back, lower with control and return to standing. Alternate sides; record total repetitions across both legs.'],
+ ['dips','Dips','reps','Calisthenics','Use secure parallel bars. Lower through a controlled range you can manage and press back up without bouncing.'],
+ ['bicycle','Bicycle crunches','reps','Core','From your back, alternate bringing the opposite shoulder and bent knee toward each other. Move slowly; count total alternating repetitions.'],
+ ['dead-bug','Dead bug','reps','Core','Lie on your back with arms up and hips/knees bent. Slowly extend opposite arm and leg while controlling your trunk; return and alternate. Count total sides.'],
+ ['plank','Plank','hold','Core','Support yourself on forearms and toes, keeping your trunk aligned. End the hold when you can no longer maintain your chosen position.'],
+ ['hollow','Hollow-body hold','hold','Core','Lie on your back, brace and raise shoulders and legs only as far as you can maintain a controlled trunk position. Bend knees to change difficulty.'],
+ ['horse','Horse stance','hold','Calisthenics','Take a wide stance and lower to a controlled squat position. Hold at a manageable depth with knees tracking in line with your feet.'],
+ ['swing','Kettlebell swing','reps','Conditioning','Use a hip hinge to drive the kettlebell forward, then let it return under control. This requires a learned hinge technique; select another exercise if unfamiliar.']
+].map(([id,name,metric,group,instructions])=>({id,name,metric,group,instructions}));
