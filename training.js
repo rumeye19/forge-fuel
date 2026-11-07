@@ -28,7 +28,26 @@ function applyLoading(s,e,p,percent) {
  const bw=r.bodyweight||0,raw=Math.max(0,r.maximum*p.factor*percent-bw),inc=toLb(p.increment,p.incrementUnit),load=Math.floor((raw+1e-8)/inc)*inc;
  e.sets.forEach(v=>v.weight=load);e.reference={maximum:r.maximum,factor:p.factor,percent,raw,increment:inc,method:r.kind==='estimate'?'estimate':'direct',load:r.kind==='estimate'?r.load:null,reps:r.kind==='estimate'?r.reps:null,...(bw?{bodyweight:bw}:{})};return e;
 }
-export function calisthenics(p){return p.calis.map(id=>{const e=movement(id);e.role='accessory';e.section='calisthenics';e.format=p.calisFormat;e.rest=p.calisRest;e.sets=p.calisReps.map(reps=>({...C.target(e.metric),reps:e.metric==='hold'?null:reps,seconds:e.metric==='hold'?p.calisHold:null}));return e;});}
+// Owner-approved personal rule, not from the TB books: [percent of max, sets]. Weeks 3 and 6 ease off with the heavy lifting weeks.
+export const CALIS_WAVE=[[.5,3],[.6,3],[.4,2],[.55,3],[.65,3],[.4,2]];
+export function calisTargets(maximum,week,format='sets') {
+ if(format==='near-failure')return null;
+ const [percent,sets]=CALIS_WAVE[(week-1)%CALIS_WAVE.length],each=Math.max(1,Math.floor(maximum*percent+1e-8));
+ if(format==='sets')return Array(sets).fill(each);
+ let total=each*sets;const out=[];
+ if(format==='ladder')for(let rung=1;total>0&&out.length<30;rung=rung>=each?1:rung+1){const r=Math.min(rung,total);out.push(r);total-=r;}
+ else{const peak=Math.min(each,Math.max(1,Math.floor(Math.sqrt(total))));for(;total>=peak*peak&&out.length+peak*2<=30;total-=peak*peak)for(let r=1;r<peak*2;r++)out.push(r<=peak?r:peak*2-r);}
+ return out;
+}
+function applyCalis(s,e,week) {
+ const r=latestMax(s,e.name),targets=r&&r.metric===e.metric?calisTargets(r.maximum,week,e.metric==='hold'?'sets':e.format):null;
+ if(!targets)return e;
+ e.sets=targets.map(v=>({...C.target(e.metric),reps:e.metric==='hold'?null:v,seconds:e.metric==='hold'?v:null}));
+ e.autoTarget={maximum:r.maximum,percent:CALIS_WAVE[(week-1)%CALIS_WAVE.length][0]};return e;
+}
+// The wave follows strength weeks, so Base Building's first Fighter week (program week 6) is wave week 1.
+export function waveWeek(t){return t.guide.source==='TBII Standard Base Building'?t.guide.week-5:t.guide.week;}
+export function calisthenics(p,s=null,week=1){return p.calis.map(id=>{const e=movement(id);e.role='accessory';e.section='calisthenics';e.format=p.calisFormat;e.rest=p.calisRest;e.sets=p.calisReps.map(reps=>({...C.target(e.metric),reps:e.metric==='hold'?null:reps,seconds:e.metric==='hold'?p.calisHold:null}));return s?applyCalis(s,e,week):e;});}
 export function condition(id,variant='basic',minutes=30,easy=false) {
  const c=CONDITIONING.find(c=>c.id===id);if(!c)throw new Error('Choose a conditioning session.');
  if(c.type==='e'){const e=C.exercise(`${c.mode} · easy endurance`,'cardio');e.catalogId=id;e.rest=0;e.instructions='Maintain an easy conversational effort. Work for the prescribed time; distance is optional. For running, run-walk is allowed. Avoid turning this into intervals. Source: TBII Endurance #1.';e.sets=[{...C.target('cardio'),seconds:minutes*60}];return [e];}
@@ -50,7 +69,7 @@ function slot(s,p,week,day,type,a,b,{base=false,green=false,zuluKind}={}) {
  if(type==='se'){t.name='Strength-endurance circuit';t.notes=`${a} rounds × ${b} reps per exercise, in circuit order. Rest-pause to accumulate reps if needed. Reps are totals across both sides for unilateral work. Light resistance, 30–120 seconds between exercises and 2 minutes between rounds. Your personal exercise selection follows the book’s circuit framework.`;t.exercises=circuit(p,a,b);}
  if(type==='e'){t.exercises=condition(p.endurance,'basic',a||30);t.name=t.exercises[0].name;t.notes=`Easy endurance · ${a===b||!b?a||30:`${a}–${b}`} minutes. ${t.exercises[0].instructions}`;}
  if(type==='hic'){const c=CONDITIONING.find(c=>c.id===p.hic);if(base&&!c.base)throw new Error('Base Building requires HIC #1–10.');t.exercises=condition(p.hic,p.variant,30,!base&&!green&&week%3===0);t.name=c.name+(week%3===0&&!base&&!green?' · easy week':'');t.notes=t.exercises[0].instructions;}
- if(type==='strength'){if(p.barbell==='Zulu'&&!base)t.split=zuluKind;const q=base?{...p,barbell:'Fighter',cluster:p.cluster.slice(0,3)}:p;t.exercises=strength(s,q,base?week-5:week,day,zuluKind);t.exercises.push(...calisthenics(p));t.name=(base?'Fighter':p.barbell)+(zuluKind?` ${zuluKind}`:'')+' + calisthenics';t.notes=`${base?'Fighter during Base Building':p.barbell+' strength'}. Three work sets per main lift; deadlifts use the book’s one-work-set-per-session option. Rest at least two minutes between sets. Avoid muscular failure during ordinary strength work. Your personal calisthenics follows the main work.`;}
+ if(type==='strength'){if(p.barbell==='Zulu'&&!base)t.split=zuluKind;const q=base?{...p,barbell:'Fighter',cluster:p.cluster.slice(0,3)}:p;t.exercises=strength(s,q,base?week-5:week,day,zuluKind);t.exercises.push(...calisthenics(p,s,base?week-5:week));t.name=(base?'Fighter':p.barbell)+(zuluKind?` ${zuluKind}`:'')+(p.calis.length?' + calisthenics':'');t.notes=`${base?'Fighter during Base Building':p.barbell+' strength'}. Three work sets per main lift; deadlifts use the book’s one-work-set-per-session option. Rest at least two minutes between sets. Avoid muscular failure during ordinary strength work. Your personal calisthenics follows the main work.`;}
  if(['rest','recovery'].includes(type)){t.name=type==='rest'?'Rest':'Recovery';t.notes=type==='rest'?'Take a day without structured training. Acknowledge after resting.':'Keep activity easy, or take another rest day. Record any gentle movement in the notes.';const e=C.exercise(t.name,'hold');e.sets=[{...C.target('hold'),seconds:0}];t.exercises=[e];}
  t.needsMax=t.exercises.some(e=>e.needsMax);return t;
 }
@@ -82,15 +101,15 @@ export function enroll(s,p,now=Date.now()) {
 export function saveMax(s,{catalogId,name,kind,value,reps,unit,date,bodyweight},now=Date.now()) {
  const m=catalogId?findMovement(catalogId):null;name=(m?.name||name||'').trim();const metric=m?.metric||'strength';
  if(!name||!['manual','estimate','rep-test'].includes(kind)||!['lb','kg'].includes(unit)||!(value>0)||!Number.isFinite(value)||!/^\d{4}-\d{2}-\d{2}$/.test(date)||!Number.isFinite(Date.parse(date))||date>C.iso(now).slice(0,10))throw new Error('Enter a valid dated maximum or test result.');
- if(metric==='reps'&&(!Number.isInteger(value)||value>10000)||metric==='strength'&&toLb(value,unit)>5000)throw new Error('Maximum is outside the supported range.');
- if(metric==='reps'&&kind==='estimate')throw new Error('Bodyweight maximums use clean repetition counts, not a load-based 1RM.');
+ if(metric!=='strength'&&(!Number.isInteger(value)||value>10000)||metric==='strength'&&toLb(value,unit)>5000)throw new Error('Maximum is outside the supported range.');
+ if(metric!=='strength'&&kind==='estimate')throw new Error('Bodyweight maximums use clean repetitions or seconds, not a load-based 1RM.');
  const bw=bodyweight===undefined||bodyweight===null?null:toLb(bodyweight,unit);if(bw!==null&&(metric!=='strength'||!(bw>0&&bw<=2000)))throw new Error('Enter a valid body weight.');
- const load=metric==='strength'?toLb(value,unit)+(kind==='estimate'&&bw?bw:0):null,maximum=kind==='estimate'?P.estimateMax(load,reps):metric==='reps'?value:load;
- const r={id:C.uid(),catalogId:catalogId||null,name,metric,kind,maximum,load:kind==='estimate'?load:null,reps:kind==='estimate'?reps:metric==='reps'?value:null,inputValue:value,inputUnit:metric==='reps'?'reps':unit,date,createdAt:C.iso(now),method:kind==='estimate'?'brzycki-v1':metric==='reps'?'clean-reps':'manual-reference',...(bw?{bodyweight:bw}:{})};
+ const load=metric==='strength'?toLb(value,unit)+(kind==='estimate'&&bw?bw:0):null,maximum=kind==='estimate'?P.estimateMax(load,reps):metric==='strength'?load:value;
+ const r={id:C.uid(),catalogId:catalogId||null,name,metric,kind,maximum,load:kind==='estimate'?load:null,reps:kind==='estimate'?reps:metric==='reps'?value:null,inputValue:value,inputUnit:metric==='reps'?'reps':metric==='hold'?'seconds':unit,date,createdAt:C.iso(now),method:kind==='estimate'?'brzycki-v1':metric==='reps'?'clean-reps':metric==='hold'?'clean-hold':'manual-reference',...(bw?{bodyweight:bw}:{})};
  s.maxTests.push(r);recalculate(s,name);return r;
 }
 function future(s){const locked=new Set(s.workouts.filter(w=>w.planRef?.version===s.plan.version&&(w.status==='active'||w.completion==='full')).map(w=>w.templateId));return s.plan.sequence.slice(s.plan.cursor).map(id=>s.templates.find(t=>t.id===id)).filter(t=>t&&!locked.has(t.id));}
-export function recalculate(s,name){const p=s.plan.configuration||profile(s);for(const t of future(s)){for(const e of t.exercises)if(e.loading&&(!name||e.name===name))applyLoading(s,e,{...p,factor:e.loading.factor,increment:e.loading.increment,incrementUnit:e.loading.unit},e.loading.percent);t.needsMax=t.exercises.some(e=>e.needsMax);}}
+export function recalculate(s,name){const p=s.plan.configuration||profile(s);for(const t of future(s)){for(const e of t.exercises){if(e.loading&&(!name||e.name===name))applyLoading(s,e,{...p,factor:e.loading.factor,increment:e.loading.increment,incrementUnit:e.loading.unit},e.loading.percent);if(e.section==='calisthenics'&&t.guide?.type==='strength'&&(!name||e.name===name))applyCalis(s,e,waveWeek(t));}t.needsMax=t.exercises.some(e=>e.needsMax);}}
 export function editTargets(s,templateId,rows,{scope='day',programReps=true,saveRoutine=false}={}) {
  const selected=s.templates.find(t=>t.id===templateId);if(!selected||!Array.isArray(rows)||!rows.length)throw new Error('Choose at least one exercise.');
  const targets=future(s).filter(t=>scope==='day'?t.id===templateId:t.guide?.type===selected.guide?.type&&(!selected.split||t.split===selected.split));
@@ -114,7 +133,7 @@ export function swapCondition(s,templateId,id,variant,scope='day') {
  const ts=future(s).filter(t=>scope==='day'?t.id===templateId:t.guide?.type===choice.type);if(!ts.some(t=>t.id===templateId))throw new Error('Choose a future day, not an unfinished or completed session.');
  for(const t of ts){t.exercises=condition(id,variant,t.guide.minMinutes||30,s.plan.program?.id==='tb-continuation-v1'&&s.plan.configuration?.conditioning==='Black'&&t.guide.week%3===0);t.name=choice.name;t.notes=t.exercises[0].instructions;t.custom=true;t.version++;}s.plan.editRevision=(s.plan.editRevision||0)+1;return ts.length;
 }
-export function updateCalis(s,p){validateProfile(p);s.profile={...profile(s),calis:p.calis,calisFormat:p.calisFormat,calisReps:p.calisReps,calisHold:p.calisHold,calisRest:p.calisRest};if(s.plan.configuration)Object.assign(s.plan.configuration,{calis:p.calis,calisFormat:p.calisFormat,calisReps:p.calisReps,calisHold:p.calisHold,calisRest:p.calisRest});let n=0;for(const t of future(s).filter(t=>t.guide?.type==='strength')){t.exercises=t.exercises.filter(e=>e.section!=='calisthenics');t.exercises.push(...calisthenics(p));t.version++;n++;}return n;}
+export function updateCalis(s,p){validateProfile(p);s.profile={...profile(s),calis:p.calis,calisFormat:p.calisFormat,calisReps:p.calisReps,calisHold:p.calisHold,calisRest:p.calisRest};if(s.plan.configuration)Object.assign(s.plan.configuration,{calis:p.calis,calisFormat:p.calisFormat,calisReps:p.calisReps,calisHold:p.calisHold,calisRest:p.calisRest});let n=0;for(const t of future(s).filter(t=>t.guide?.type==='strength')){t.exercises=t.exercises.filter(e=>e.section!=='calisthenics');t.exercises.push(...calisthenics(p,s,waveWeek(t)));t.name=t.name.replace(/ \+ calisthenics$/,'')+(p.calis.length?' + calisthenics':'');t.version++;n++;}return n;}
 export function retestMessage(s){const p=s.plan.program;if(!p)return '';if(p.id==='tb2-standard-2015-v1')return p.completed?'Base Building complete. Review your maximums before starting continuation.':'';const weeks=s.plan.configuration?.conditioning==='Green'?9:s.plan.configuration?.retestWeeks||12;if(!p.completed&&Math.floor(s.plan.cursor/7)<weeks)return '';return `Review maximums after this ${weeks}-program-week strength phase. You can test, repeat with the same numbers or postpone. New results change future targets only.`;}
 export function graphPoints(s,key){return C.observations(s,key).map(o=>({...o,x:Date.parse(o.date),value:C.primaryValue(o)}));}
 

@@ -275,7 +275,7 @@ export function validateState(s) {
   if(p.configuration!==undefined)validateProfileData(p.configuration);
   if(!Array.isArray(s.favorites)||s.favorites.length>200||s.favorites.some(v=>!id(v))||!Array.isArray(s.maxTests)||s.maxTests.length>10000)fail('Invalid preferences or maximum history.');
   unique(s.maxTests,'maximum');
-  for(const m of s.maxTests)if(!text(m.name,160)||!m.name.trim()||!['strength','reps'].includes(m.metric)||!['manual','estimate','rep-test'].includes(m.kind)||!num(m.maximum,m.metric==='strength'?5000:10000)||m.maximum<=0||!stamp(m.createdAt)||!stamp(m.date)||!text(m.method,80)||!num(m.inputValue,10000)||!['lb','kg','reps'].includes(m.inputUnit)||m.kind==='estimate'&&(!num(m.load,5000)||![3,4,5].includes(m.reps))||m.bodyweight!==undefined&&(!num(m.bodyweight,2000)||m.bodyweight<=0))fail('Invalid maximum/test record.');
+  for(const m of s.maxTests)if(!text(m.name,160)||!m.name.trim()||!['strength','reps','hold'].includes(m.metric)||!['manual','estimate','rep-test'].includes(m.kind)||!num(m.maximum,m.metric==='strength'?5000:10000)||m.maximum<=0||!stamp(m.createdAt)||!stamp(m.date)||!text(m.method,80)||!num(m.inputValue,10000)||!['lb','kg','reps','seconds'].includes(m.inputUnit)||m.kind==='estimate'&&(!num(m.load,5000)||![3,4,5].includes(m.reps))||m.bodyweight!==undefined&&(!num(m.bodyweight,2000)||m.bodyweight<=0))fail('Invalid maximum/test record.');
   for (const w of s.workouts) {
     if (!object(w) || !id(w.id) || !['active', 'completed'].includes(w.status) ||
         !['planned', 'standalone'].includes(w.kind) || !text(w.title, 160) || !w.title.trim() || !id(w.templateId) ||
