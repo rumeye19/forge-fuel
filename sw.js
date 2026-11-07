@@ -1,4 +1,4 @@
-const CACHE = 'forge-fuel-shell-v2b6';
+const CACHE = 'forge-fuel-shell-v2b9';
 const SHELL = ['./', './index.html', './styles.css', './app.js', './core.js', './programs.js', './catalog.js', './movement-data.js', './training.js', './storage.js', './manifest.webmanifest', './icon.svg', './icon-192.png', './icon-512.png', './barlow-condensed-500.woff2', './barlow-condensed-600.woff2', './barlow-condensed-700.woff2'];
 self.addEventListener('install', event => event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL))));
 self.addEventListener('activate', event => event.waitUntil((async () => {
